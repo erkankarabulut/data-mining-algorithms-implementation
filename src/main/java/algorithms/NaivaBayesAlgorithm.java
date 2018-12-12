@@ -5,7 +5,6 @@ import main.java.controller.MainController;
 import main.java.util.MathUtil;
 
 import java.util.ArrayList;
-import java.util.Random;
 
 public class NaivaBayesAlgorithm {
 
@@ -26,74 +25,76 @@ public class NaivaBayesAlgorithm {
         Double zeroRate = classLabelRates.get(0);
         Double oneRate  = classLabelRates.get(1);
 
-        ArrayList splittedDatasets = splitDataset(lines, controller.getTestDataRate(), controller.getTrainingDataRate());
-        ArrayList<Line> training   = (ArrayList<Line>) splittedDatasets.get(0);
-        ArrayList<Line> test       = (ArrayList<Line>) splittedDatasets.get(1);
+        Integer crossValidationCount = controller.getCrossValidOrClusterCount();
+        for(int c=0; c<crossValidationCount; c++){
+            ArrayList splittedDatasets = splitDataset(lines, c, crossValidationCount);
+            ArrayList<Line> training   = (ArrayList<Line>) splittedDatasets.get(0);
+            ArrayList<Line> test       = (ArrayList<Line>) splittedDatasets.get(1);
 
-        ArrayList<Double> meanListForZero        = new ArrayList<Double>();
-        ArrayList<Double> varianceListForZero    = new ArrayList<Double>();
-        ArrayList<Double> meanListForOne        = new ArrayList<Double>();
-        ArrayList<Double> varianceListForOne    = new ArrayList<Double>();
+            ArrayList<Double> meanListForZero        = new ArrayList<Double>();
+            ArrayList<Double> varianceListForZero    = new ArrayList<Double>();
+            ArrayList<Double> meanListForOne        = new ArrayList<Double>();
+            ArrayList<Double> varianceListForOne    = new ArrayList<Double>();
 
-        for(int i=0; i<lines.get(0).getAttributeList().size(); i++){
-            meanListForZero.add(mathUtil.getMeanValue(i, training, 0));
-            meanListForOne.add(mathUtil.getMeanValue(i, training, 1));
+            for(int i=0; i<lines.get(0).getAttributeList().size(); i++){
+                meanListForZero.add(mathUtil.getMeanValue(i, training, 0));
+                meanListForOne.add(mathUtil.getMeanValue(i, training, 1));
 
-            varianceListForOne.add(mathUtil.getVariance(i, training, 1));
-            varianceListForZero.add(mathUtil.getVariance(i, training, 0));
-        }
-
-        for(Line line : test){
-            Double zeroProbability = new Double(1);
-            Double oneProbability  = new Double(1);
-            Double mean            = new Double(0);
-            Double variance        = new Double(0);
-
-            for(int i=0; i<line.getAttributeList().size(); i++){
-                mean      = meanListForZero.get(i);
-                variance  = varianceListForZero.get(i);
-                zeroProbability *= ((1 / (Math.sqrt(2 * mathUtil.pi * (variance * variance))))
-                        * Math.pow(mathUtil.e, -((line.getAttributeList().get(i) - mean) / (2 * variance * variance))));
+                varianceListForOne.add(mathUtil.getVariance(i, training, 1));
+                varianceListForZero.add(mathUtil.getVariance(i, training, 0));
             }
-            zeroProbability *= zeroRate;
 
-            for(int i=0; i<line.getAttributeList().size(); i++){
-                mean      = meanListForOne.get(i);
-                variance  = varianceListForOne.get(i);
-                oneProbability *= ((1 / (Math.sqrt(2 * mathUtil.pi * (variance * variance))))
-                        * Math.pow(mathUtil.e, -((line.getAttributeList().get(i) - mean) / (2 * variance * variance))));
-            }
-            oneProbability *= oneRate;
+            for(Line line : test){
+                Double zeroProbability = new Double(1);
+                Double oneProbability  = new Double(1);
+                Double mean            = new Double(0);
+                Double variance        = new Double(0);
 
-            Integer tempResult = (oneProbability > zeroProbability ? 1 : 0);
-            if(findClassLabel(lines, line.getAttributeList()) == 0){
-                if(tempResult == findClassLabel(lines, line.getAttributeList())){
-                    tn++;
-                }else {
-                    fn++;
+                for(int i=0; i<line.getAttributeList().size(); i++){
+                    mean      = meanListForZero.get(i);
+                    variance  = varianceListForZero.get(i);
+                    zeroProbability *= ((1 / (Math.sqrt(2 * mathUtil.pi * (variance * variance))))
+                            * Math.pow(mathUtil.e, -((line.getAttributeList().get(i) - mean) / (2 * variance * variance))));
+                    if(zeroProbability == 0 || Double.isInfinite(zeroProbability)){
+                        break;
+                    }
                 }
-            }else {
-                if(tempResult == findClassLabel(lines, line.getAttributeList())){
-                    tp++;
-                }else {
-                    fp++;
+                zeroProbability *= zeroRate;
+
+                for(int i=0; i<line.getAttributeList().size(); i++){
+                    mean      = meanListForOne.get(i);
+                    variance  = varianceListForOne.get(i);
+                    oneProbability *= ((1 / (Math.sqrt(2 * mathUtil.pi * (variance * variance))))
+                            * (1/Math.pow(mathUtil.e, ((line.getAttributeList().get(i) - mean) / (2 * variance * variance)))));
+                    if(oneProbability == 0 || Double.isInfinite(oneProbability)){
+                        break;
+                    }
                 }
+                oneProbability *= oneRate;
+
+                Integer tempResult = (zeroProbability > oneProbability ? 0 : 1);
+                if(line.getClassLabel() == 0){
+                    if(tempResult == 0){
+                        tn++;
+                    }else {
+                        fp++;
+                    }
+                }else {
+                    if(tempResult == 1){
+                        tp++;
+                    }else {
+                        fn++;
+                    }
+                }
+
             }
+
+            System.out.println("Metrics: " + tn + " - " + tp + " - " + fn + " - " + fp);
         }
 
-        System.out.println("Metrics: " + tn + " - " + tp + " - " + fn + " - " + fp);
-    }
-
-    public Integer findClassLabel(ArrayList<Line> lines, ArrayList<Double> values){
-        Integer result = new Integer(-1);
-        for(Line line : lines){
-            if(line.getAttributeList() == values){
-                result = line.getClassLabel();
-                break;
-            }
-        }
-
-        return result;
+        System.out.println("Accuracy: " + ((tp.doubleValue() + tn.doubleValue()) / (tp.doubleValue() + fp.doubleValue() + fn.doubleValue() + tn.doubleValue())));
+        System.out.println("Precision: " + (tp.doubleValue()/(tp.doubleValue() + fp.doubleValue())));
+        System.out.println("Recall: " + (tp.doubleValue()/(tp.doubleValue()+fn.doubleValue())));
     }
 
     public ArrayList<Double> findClassLabelRates(ArrayList<Line> lines){
@@ -111,43 +112,29 @@ public class NaivaBayesAlgorithm {
         return results;
     }
 
-    public ArrayList<ArrayList<Line>> splitDataset(ArrayList<Line> lines, Integer testRate, Integer trainingRate){
+    public ArrayList<ArrayList<Line>> splitDataset(ArrayList<Line> lines, Integer crossValidationPointer, Integer crossValidationCount){
         ArrayList result = new ArrayList();
 
-        Integer randomPickupCount = new Integer(0);
-        if(testRate > trainingRate){
-            randomPickupCount = lines.size() * trainingRate / 100;
-        }else {
-            randomPickupCount = lines.size() * testRate / 100;
-        }
+        ArrayList<Line> test            = new ArrayList<Line>();
+        ArrayList<Line> training        = new ArrayList<Line>();
+        Integer testDatasetSize         = lines.size() / crossValidationCount;
+        Integer startPoint              = testDatasetSize * crossValidationPointer;
 
-        ArrayList<Line> dataset1        = new ArrayList<Line>();
-        ArrayList<Line> dataset2        = new ArrayList<Line>();
-        ArrayList<Integer> choosenLines = new ArrayList<Integer>();
-        for (int i=0; i<randomPickupCount; i++){
-            Random random = new Random();
-            int n = random.nextInt(lines.size()-1);
-            while (choosenLines.contains(n)){
-                n = random.nextInt(lines.size()-1);
-            }
-
-            choosenLines.add(n);
-            dataset1.add(lines.get(n));
+        for(int i=0; i<testDatasetSize; i++){
+            test.add(lines.get(startPoint));
+            startPoint++;
         }
 
         for(int i=0; i<lines.size(); i++){
-            if(!choosenLines.contains(i)){
-                dataset2.add(lines.get(i));
+            if(i != startPoint){
+                training.add(lines.get(i));
+            }else {
+                i += testDatasetSize - 1;
             }
         }
 
-        if(testRate > trainingRate){
-            result.add(dataset1);
-            result.add(dataset2);
-        }else {
-            result.add(dataset2);
-            result.add(dataset1);
-        }
+        result.add(training);
+        result.add(test);
 
         return result;
     }

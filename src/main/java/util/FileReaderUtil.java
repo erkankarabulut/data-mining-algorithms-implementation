@@ -19,7 +19,7 @@ public class FileReaderUtil {
                 // Skip the attribute names etc. parts
             }
 
-
+            Integer order = 0;
             while ((lineContent = br.readLine()) != null){
                 String values[] = lineContent.split(",");
                 Line line = new Line();
@@ -28,6 +28,7 @@ public class FileReaderUtil {
                 }
 
                 line.setClassLabel(Integer.parseInt(values[values.length-1]));
+                line.setOrder(order++);
                 lineList.add(line);
             }
         }catch (Exception e){

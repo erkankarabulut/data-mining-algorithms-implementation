@@ -9,6 +9,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import main.java.algorithms.KMeansAlgorithm;
 import main.java.algorithms.NaivaBayesAlgorithm;
 import main.java.bean.Line;
 import main.java.util.FileReaderUtil;
@@ -27,16 +28,15 @@ public class MainController implements Initializable {
 
     @FXML ImageView ytuLogo;
 
-    @FXML Spinner testRate;
-    @FXML Spinner iterationCount;
+    @FXML Spinner crossValidOrCluster;
 
     @FXML Label fileName;
     @FXML Label algorithmName;
-    @FXML Label trainingDataRateLabel;
-    @FXML Label testDataRateLabel;
     @FXML Label resultLabel;
     @FXML Label errorMessageLabel;
-    @FXML Label iterationCountLabel;
+    @FXML Label crossValidationCountLabel;
+    @FXML Label parameterLabel;
+    @FXML Label parameterLabel2;
 
     private String logFileName;
     private String logFilePath;
@@ -47,7 +47,7 @@ public class MainController implements Initializable {
     private Integer algorithmPointer;
     private Integer testDataRate;
     private Integer trainingDataRate;
-    private Integer iterationCountValue;
+    private Integer crossValidOrClusterCount;
 
     private Double accuracy;
     private Double recall;
@@ -57,24 +57,21 @@ public class MainController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-        testDataRate             = 20;
-        trainingDataRate         = 80;
-        iterationCountValue      = 100;
-        fileReaderUtil           = new FileReaderUtil();
+        testDataRate                = 20;
+        trainingDataRate            = 80;
+        crossValidOrClusterCount    = 10;
+        fileReaderUtil              = new FileReaderUtil();
 
-        trainingDataRateLabel.setText(trainingDataRate.toString());
-        testDataRateLabel.setText(testDataRate.toString());
         resultLabel.setText("Please choose a data file and an algorithm then run the program to see the results.");
-
         ytuLogo.setImage(new Image(getClass().getResourceAsStream("../../resources/ytu.png")));
-        testRate.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1,99));
-        testRate.getValueFactory().setValue(new Integer(20));
-        testRate.setEditable(true);
+        selectAlgorithmComboBox.getSelectionModel().select(0);
+        algorithmPointer = selectAlgorithmComboBox.getSelectionModel().getSelectedIndex();
+        algorithmName.setText(selectAlgorithmComboBox.getSelectionModel().getSelectedItem().toString());
 
-        iterationCount.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1,99999));
-        iterationCount.getValueFactory().setValue(new Integer(100));
-        iterationCountLabel.setText(new Integer(100).toString());
-        iterationCount.setEditable(true);
+        crossValidOrCluster.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1,99999));
+        crossValidOrCluster.getValueFactory().setValue(new Integer(10));
+        crossValidationCountLabel.setText(new Integer(10).toString());
+        crossValidOrCluster.setEditable(true);
 
         chooseLogFileButton.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -94,6 +91,14 @@ public class MainController implements Initializable {
             public void handle(ActionEvent actionEvent) {
                 algorithmPointer = selectAlgorithmComboBox.getSelectionModel().getSelectedIndex();
                 algorithmName.setText(selectAlgorithmComboBox.getSelectionModel().getSelectedItem().toString());
+
+                if(algorithmPointer == 0){
+                    parameterLabel.setText("Cross-validation folds: ");
+                    parameterLabel2.setText("Cross-validation folds: ");
+                }else if(algorithmPointer == 1){
+                    parameterLabel.setText("Cluster count: ");
+                    parameterLabel2.setText("Cluster count: ");
+                }
             }
         });
 
@@ -103,9 +108,14 @@ public class MainController implements Initializable {
 
                 if(selectAlgorithmComboBox.getSelectionModel().getSelectedIndex() >= 0 && logFileName != null){
                     ArrayList<Line> lineList = fileReaderUtil.readLogFile(logFilePath);
-                    if(algorithmPointer == 0){
+                    if (algorithmPointer == 0){
                         NaivaBayesAlgorithm naivaBayesAlgorithm = new NaivaBayesAlgorithm();
+                        // In here, crossValidOrCluster represents fold count
                         naivaBayesAlgorithm.applyNaiveBayesAlgorithm(getInstance(), lineList);
+                    }else if (algorithmPointer == 1){
+                        KMeansAlgorithm kMeansAlgorithm = new KMeansAlgorithm();
+                        // Here, crossValidOrCluster represents cluster count
+                        kMeansAlgorithm.applyKMeansAlgorithm(getInstance(), lineList, crossValidOrClusterCount);
                     }
                 }else {
                     errorMessageLabel.setText("Warning: Please choose a log file and an algorithm.");
@@ -114,22 +124,11 @@ public class MainController implements Initializable {
             }
         });
 
-        testRate.getValueFactory().valueProperty().addListener(new ChangeListener() {
+        crossValidOrCluster.getValueFactory().valueProperty().addListener(new ChangeListener() {
             @Override
             public void changed(ObservableValue observableValue, Object o, Object t1) {
-                setTestDataRate(Integer.parseInt(t1.toString()));;
-                setTrainingDataRate(Math.abs(100 - Integer.parseInt(t1.toString())));
-
-                trainingDataRateLabel.setText(getTrainingDataRate().toString());
-                testDataRateLabel.setText(getTestDataRate().toString());
-            }
-        });
-
-        iterationCount.getValueFactory().valueProperty().addListener(new ChangeListener() {
-            @Override
-            public void changed(ObservableValue observableValue, Object o, Object t1) {
-                setIterationCountValue(Integer.parseInt(t1.toString()));
-                iterationCountLabel.setText(t1.toString());
+                setCrossValidOrClusterCount(Integer.parseInt(t1.toString()));
+                crossValidationCountLabel.setText(t1.toString());
             }
         });
     }
@@ -178,12 +177,12 @@ public class MainController implements Initializable {
         this.precision = precision;
     }
 
-    public Integer getIterationCountValue() {
-        return iterationCountValue;
+    public Integer getCrossValidOrClusterCount() {
+        return crossValidOrClusterCount;
     }
 
-    public void setIterationCountValue(Integer iterationCountValue) {
-        this.iterationCountValue = iterationCountValue;
+    public void setCrossValidOrClusterCount(Integer crossValidOrClusterCount) {
+        this.crossValidOrClusterCount = crossValidOrClusterCount;
     }
 
     public String getFileWithBinaryLabelsPath() {
