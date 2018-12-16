@@ -208,4 +208,20 @@ public class MainController implements Initializable {
     public void setFileWithMultiClassLabelsPath(String fileWithMultiClassLabelsPath) {
         this.fileWithMultiClassLabelsPath = fileWithMultiClassLabelsPath;
     }
+
+    public Label getResultLabel() {
+        return resultLabel;
+    }
+
+    public void setResultLabel(Label resultLabel) {
+        this.resultLabel = resultLabel;
+    }
+
+    public ComboBox getSelectAlgorithmComboBox() {
+        return selectAlgorithmComboBox;
+    }
+
+    public void setSelectAlgorithmComboBox(ComboBox selectAlgorithmComboBox) {
+        this.selectAlgorithmComboBox = selectAlgorithmComboBox;
+    }
 }

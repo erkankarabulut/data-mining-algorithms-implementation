@@ -21,18 +21,18 @@ public class NaivaBayesAlgorithm {
         Integer tn = new Integer(0);
         Integer fn = new Integer(0);
 
-        ArrayList<Double> classLabelRates = findClassLabelRates(lines);
-        Double zeroRate = classLabelRates.get(0);
-        Double oneRate  = classLabelRates.get(1);
-
         Integer crossValidationCount = controller.getCrossValidOrClusterCount();
         for(int c=0; c<crossValidationCount; c++){
             ArrayList splittedDatasets = splitDataset(lines, c, crossValidationCount);
-            ArrayList<Line> training   = (ArrayList<Line>) splittedDatasets.get(0);
+            ArrayList<Line> training   = lines;
             ArrayList<Line> test       = (ArrayList<Line>) splittedDatasets.get(1);
 
-            ArrayList<Double> meanListForZero        = new ArrayList<Double>();
-            ArrayList<Double> varianceListForZero    = new ArrayList<Double>();
+            ArrayList<Double> classLabelRates = findClassLabelRates(training);
+            Double zeroRate = classLabelRates.get(0);
+            Double oneRate  = classLabelRates.get(1);
+
+            ArrayList<Double> meanListForZero       = new ArrayList<Double>();
+            ArrayList<Double> varianceListForZero   = new ArrayList<Double>();
             ArrayList<Double> meanListForOne        = new ArrayList<Double>();
             ArrayList<Double> varianceListForOne    = new ArrayList<Double>();
 
@@ -47,59 +47,60 @@ public class NaivaBayesAlgorithm {
             for(Line line : test){
                 Double zeroProbability = new Double(1);
                 Double oneProbability  = new Double(1);
-                Double mean            = new Double(0);
-                Double variance        = new Double(0);
 
-                for(int i=0; i<line.getAttributeList().size(); i++){
-                    mean      = meanListForZero.get(i);
-                    variance  = varianceListForZero.get(i);
-                    zeroProbability *= ((1 / (Math.sqrt(2 * mathUtil.pi * (variance * variance))))
-                            * Math.pow(mathUtil.e, -((line.getAttributeList().get(i) - mean) / (2 * variance * variance))));
-                    if(zeroProbability == 0 || Double.isInfinite(zeroProbability)){
-                        break;
-                    }
-                }
+                zeroProbability = calculateAttributepossilibities(meanListForZero, varianceListForZero, line, zeroProbability);
                 zeroProbability *= zeroRate;
 
-                for(int i=0; i<line.getAttributeList().size(); i++){
-                    mean      = meanListForOne.get(i);
-                    variance  = varianceListForOne.get(i);
-                    oneProbability *= ((1 / (Math.sqrt(2 * mathUtil.pi * (variance * variance))))
-                            * (1/Math.pow(mathUtil.e, ((line.getAttributeList().get(i) - mean) / (2 * variance * variance)))));
-                    if(oneProbability == 0 || Double.isInfinite(oneProbability)){
-                        break;
-                    }
-                }
+                oneProbability = calculateAttributepossilibities(meanListForOne, varianceListForOne, line, oneProbability);
                 oneProbability *= oneRate;
 
                 Integer tempResult = (zeroProbability > oneProbability ? 0 : 1);
                 if(line.getClassLabel() == 0){
                     if(tempResult == 0){
-                        tn++;
-                    }else {
-                        fp++;
-                    }
-                }else {
-                    if(tempResult == 1){
                         tp++;
                     }else {
                         fn++;
                     }
+                }else {
+                    if(tempResult == 1){
+                        tn++;
+                    }else {
+                        fp++;
+                    }
                 }
 
             }
-
-            System.out.println("Metrics: " + tn + " - " + tp + " - " + fn + " - " + fp);
         }
 
-        System.out.println("Accuracy: " + ((tp.doubleValue() + tn.doubleValue()) / (tp.doubleValue() + fp.doubleValue() + fn.doubleValue() + tn.doubleValue())));
-        System.out.println("Precision: " + (tp.doubleValue()/(tp.doubleValue() + fp.doubleValue())));
-        System.out.println("Recall: " + (tp.doubleValue()/(tp.doubleValue()+fn.doubleValue())));
+        controller.setAccuracy(((tp.doubleValue() + tn.doubleValue()) / (tp.doubleValue() + fp.doubleValue() + fn.doubleValue() + tn.doubleValue())));
+        controller.setPrecision((tp.doubleValue()/(tp.doubleValue() + fp.doubleValue())));
+        controller.setRecall((tp.doubleValue()/(tp.doubleValue()+fn.doubleValue())));
+
+        controller.getResultLabel().setText("Algorithm: " + controller.getSelectAlgorithmComboBox().getSelectionModel().getSelectedItem().toString() + "\n"
+            + "Test Data Rate: " + controller.getTestDataRate() + "\nTraining Data Rate: " + controller.getTrainingDataRate()
+            + "\nFold count: " + controller.getCrossValidOrClusterCount() + "\nAccuracy: " + controller.getAccuracy()
+            + "\nAccuracy: " + controller.getAccuracy() + "\nPrecision: " + controller.getPrecision() + "\nRecall: " + controller.getRecall());
+    }
+
+    private Double calculateAttributepossilibities(ArrayList<Double> meanListForOne, ArrayList<Double> varianceListForOne,
+                                                   Line line, Double probability) {
+        Double mean;
+        Double variance;
+        for(int i = 0; i<line.getAttributeList().size(); i++){
+            mean      = meanListForOne.get(i);
+            variance  = varianceListForOne.get(i);
+            probability *= ((1 / (Math.sqrt(2 * mathUtil.pi * (variance * variance))))
+                    * Math.pow(mathUtil.e, -((line.getAttributeList().get(i) - mean) / (2 * variance * variance))));
+            if(probability == 0 || Double.isInfinite(probability)){
+                break;
+            }
+        }
+        return probability;
     }
 
     public ArrayList<Double> findClassLabelRates(ArrayList<Line> lines){
         ArrayList<Double> results    = new ArrayList<Double>();
-        Integer zeroCounter         = new Integer(0);
+        Integer zeroCounter          = new Integer(0);
         for (Line line : lines){
             if(line.getClassLabel() == 0){
                 zeroCounter++;
@@ -125,6 +126,7 @@ public class NaivaBayesAlgorithm {
             startPoint++;
         }
 
+        startPoint = testDatasetSize * crossValidationPointer;
         for(int i=0; i<lines.size(); i++){
             if(i != startPoint){
                 training.add(lines.get(i));

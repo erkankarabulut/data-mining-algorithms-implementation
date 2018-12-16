@@ -33,9 +33,36 @@ public class KMeansAlgorithm {
         }
 
         System.out.println("Counter: " + counter);
+        Double tp = new Double(0);
+        Double fp = new Double(0);
+        Double tn = new Double(0);
+        Double fn = new Double(0);
         for (int i=0; i<labels.size(); i++){
-            System.out.println("Centroid " + i + " node count: " + labels.get(i).size());
+            for(int k=0; k<labels.get(i).size(); k++){
+                if(i == 0){
+                    if(labels.get(i).get(k).getClassLabel() == i){
+                        tp++;
+                    }else {
+                        fn++;
+                    }
+                }else if(i == 1){
+                    if(labels.get(i).get(k).getClassLabel() == i){
+                        tn++;
+                    }else {
+                        fp++;
+                    }
+                }
+            }
         }
+
+        controller.setAccuracy(((tp.doubleValue() + tn.doubleValue()) / (tp.doubleValue() + fp.doubleValue() + fn.doubleValue() + tn.doubleValue())));
+        controller.setPrecision((tp.doubleValue()/(tp.doubleValue() + fp.doubleValue())));
+        controller.setRecall((tp.doubleValue()/(tp.doubleValue()+fn.doubleValue())));
+
+        controller.getResultLabel().setText("Algorithm: " + controller.getSelectAlgorithmComboBox().getSelectionModel().getSelectedItem().toString() + "\n"
+                + "\nCluster count: 2\nCluster 0 size: " + labels.get(0).size() + "\nCluster 1 size: " + labels.get(1).size()
+                + "\nAccuracy: " + controller.getAccuracy() + "\nAccuracy: " + controller.getAccuracy()
+                + "\nPrecision: " + controller.getPrecision() + "\nRecall: " + controller.getRecall());
     }
 
     public ArrayList<Line> getNewCentroids(HashMap<Integer, ArrayList<Line>> labels){

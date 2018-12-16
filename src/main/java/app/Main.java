@@ -11,7 +11,7 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception{
         Parent root = FXMLLoader.load(getClass().getResource("/main/java/ui/MainScreen.fxml"));
-        primaryStage.setTitle("Adaptive Weather Research and Forecast Model Tracing Tool");
+        primaryStage.setTitle("Data Mining Term Project");
         primaryStage.setScene(new Scene(root, 650, 600));
         primaryStage.setResizable(false);
         primaryStage.show();
