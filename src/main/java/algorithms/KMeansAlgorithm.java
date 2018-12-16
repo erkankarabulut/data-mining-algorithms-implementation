@@ -32,11 +32,11 @@ public class KMeansAlgorithm {
             centroids       = getNewCentroids(labels);
         }
 
-        System.out.println("Counter: " + counter);
         Double tp = new Double(0);
         Double fp = new Double(0);
         Double tn = new Double(0);
         Double fn = new Double(0);
+
         for (int i=0; i<labels.size(); i++){
             for(int k=0; k<labels.get(i).size(); k++){
                 if(i == 0){
@@ -59,9 +59,9 @@ public class KMeansAlgorithm {
         controller.setPrecision((tp.doubleValue()/(tp.doubleValue() + fp.doubleValue())));
         controller.setRecall((tp.doubleValue()/(tp.doubleValue()+fn.doubleValue())));
 
-        controller.getResultLabel().setText("Algorithm: " + controller.getSelectAlgorithmComboBox().getSelectionModel().getSelectedItem().toString() + "\n"
+        controller.getResultLabel().setText("Algorithm: " + controller.getSelectAlgorithmComboBox().getSelectionModel().getSelectedItem().toString()
                 + "\nCluster count: 2\nCluster 0 size: " + labels.get(0).size() + "\nCluster 1 size: " + labels.get(1).size()
-                + "\nAccuracy: " + controller.getAccuracy() + "\nAccuracy: " + controller.getAccuracy()
+                + "\nMax Iteration: 20" + "\nAccuracy: " + controller.getAccuracy()
                 + "\nPrecision: " + controller.getPrecision() + "\nRecall: " + controller.getRecall());
     }
 

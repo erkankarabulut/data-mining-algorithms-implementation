@@ -79,7 +79,7 @@ public class NaivaBayesAlgorithm {
         controller.getResultLabel().setText("Algorithm: " + controller.getSelectAlgorithmComboBox().getSelectionModel().getSelectedItem().toString() + "\n"
             + "Test Data Rate: " + controller.getTestDataRate() + "\nTraining Data Rate: " + controller.getTrainingDataRate()
             + "\nFold count: " + controller.getCrossValidOrClusterCount() + "\nAccuracy: " + controller.getAccuracy()
-            + "\nAccuracy: " + controller.getAccuracy() + "\nPrecision: " + controller.getPrecision() + "\nRecall: " + controller.getRecall());
+            + "\nPrecision: " + controller.getPrecision() + "\nRecall: " + controller.getRecall());
     }
 
     private Double calculateAttributepossilibities(ArrayList<Double> meanListForOne, ArrayList<Double> varianceListForOne,
