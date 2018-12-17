@@ -23,6 +23,9 @@ public class MainController implements Initializable {
 
     @FXML Button chooseLogFileButton;
     @FXML Button runButton;
+    @FXML Button chooseTestFileButton;
+
+    @FXML CheckBox checkBox;
 
     @FXML ComboBox selectAlgorithmComboBox;
 
@@ -37,12 +40,15 @@ public class MainController implements Initializable {
     @FXML Label crossValidationCountLabel;
     @FXML Label parameterLabel;
     @FXML Label parameterLabel2;
+    @FXML Label testSetFileName;
 
     private String logFileName;
     private String logFilePath;
     private String fileWithBinaryLabelsPath;
     private String sparseVectorFilePath;
     private String fileWithMultiClassLabelsPath;
+    private String testFileName;
+    private String testFilePath;
 
     private Integer algorithmPointer;
     private Integer testDataRate;
@@ -131,6 +137,7 @@ public class MainController implements Initializable {
                 crossValidationCountLabel.setText(t1.toString());
             }
         });
+
     }
 
     public Integer getTestDataRate() {

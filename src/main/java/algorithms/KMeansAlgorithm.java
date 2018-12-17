@@ -2,6 +2,7 @@ package main.java.algorithms;
 
 import main.java.bean.Line;
 import main.java.controller.MainController;
+import main.java.util.FormatStringUtil;
 import main.java.util.MathUtil;
 
 import java.util.ArrayList;
@@ -11,10 +12,12 @@ import java.util.Random;
 public class KMeansAlgorithm {
 
     private MathUtil mathUtil;
+    private FormatStringUtil formatStringUtil;
     private static final Integer maxIteration = 20;
 
     public KMeansAlgorithm(){
-        this.mathUtil       = new MathUtil();
+        this.mathUtil           = new MathUtil();
+        this.formatStringUtil   = new FormatStringUtil();
     }
 
     public void applyKMeansAlgorithm(MainController controller, ArrayList<Line> lines, Integer clusterCount){
@@ -36,6 +39,13 @@ public class KMeansAlgorithm {
         Double fp = new Double(0);
         Double tn = new Double(0);
         Double fn = new Double(0);
+
+        // Since the cluster with 0 label has more nodes in our dataset, let the labels with higher data size be the 0.
+        if(labels.get(1).size() > labels.get(0).size()){
+            ArrayList<Line> temp = labels.get(0);
+            labels.put(0, labels.get(1));
+            labels.put(1, temp);
+        }
 
         for (int i=0; i<labels.size(); i++){
             for(int k=0; k<labels.get(i).size(); k++){
@@ -60,6 +70,11 @@ public class KMeansAlgorithm {
         controller.setRecall((tp.doubleValue()/(tp.doubleValue()+fn.doubleValue())));
 
         controller.getResultLabel().setText("Algorithm: " + controller.getSelectAlgorithmComboBox().getSelectionModel().getSelectedItem().toString()
+                + "\nCluster count: 2\nCluster 0 size: " + labels.get(0).size() + "\nCluster 1 size: " + labels.get(1).size()
+                + "\nMax Iteration: 20" + "\nAccuracy: " + formatStringUtil.formatDoubleToRate(controller.getAccuracy())
+                + "\nPrecision: " + formatStringUtil.formatDoubleToRate(controller.getPrecision()) + "\nRecall: " + formatStringUtil.formatDoubleToRate(controller.getRecall()));
+
+        System.out.println("Algorithm: " + controller.getSelectAlgorithmComboBox().getSelectionModel().getSelectedItem().toString()
                 + "\nCluster count: 2\nCluster 0 size: " + labels.get(0).size() + "\nCluster 1 size: " + labels.get(1).size()
                 + "\nMax Iteration: 20" + "\nAccuracy: " + controller.getAccuracy()
                 + "\nPrecision: " + controller.getPrecision() + "\nRecall: " + controller.getRecall());

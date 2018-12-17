@@ -2,6 +2,7 @@ package main.java.algorithms;
 
 import main.java.bean.Line;
 import main.java.controller.MainController;
+import main.java.util.FormatStringUtil;
 import main.java.util.MathUtil;
 
 import java.util.ArrayList;
@@ -9,9 +10,11 @@ import java.util.ArrayList;
 public class NaivaBayesAlgorithm {
 
     MathUtil mathUtil;
+    FormatStringUtil formatStringUtil;
 
     public NaivaBayesAlgorithm(){
-        mathUtil = new MathUtil();
+        mathUtil            = new MathUtil();
+        formatStringUtil    = new FormatStringUtil();
     }
 
     // This is a naive bayes classifier implementation for continious attributes
@@ -78,8 +81,13 @@ public class NaivaBayesAlgorithm {
 
         controller.getResultLabel().setText("Algorithm: " + controller.getSelectAlgorithmComboBox().getSelectionModel().getSelectedItem().toString() + "\n"
             + "Test Data Rate: " + controller.getTestDataRate() + "\nTraining Data Rate: " + controller.getTrainingDataRate()
-            + "\nFold count: " + controller.getCrossValidOrClusterCount() + "\nAccuracy: " + controller.getAccuracy()
-            + "\nPrecision: " + controller.getPrecision() + "\nRecall: " + controller.getRecall());
+            + "\nFold count: " + controller.getCrossValidOrClusterCount() + "\nAccuracy: " + formatStringUtil.formatDoubleToRate(controller.getAccuracy())
+            + "\nPrecision: " + formatStringUtil.formatDoubleToRate(controller.getPrecision()) + "\nRecall: " + formatStringUtil.formatDoubleToRate(controller.getRecall()));
+
+        System.out.println("Algorithm: " + controller.getSelectAlgorithmComboBox().getSelectionModel().getSelectedItem().toString() + "\n"
+                + "Test Data Rate: " + controller.getTestDataRate() + "\nTraining Data Rate: " + controller.getTrainingDataRate()
+                + "\nFold count: " + controller.getCrossValidOrClusterCount() + "\nAccuracy: " + controller.getAccuracy()
+                + "\nPrecision: " + controller.getPrecision() + "\nRecall: " + controller.getRecall());
     }
 
     private Double calculateAttributepossilibities(ArrayList<Double> meanListForOne, ArrayList<Double> varianceListForOne,
